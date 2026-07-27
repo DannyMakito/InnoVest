@@ -1,0 +1,113 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@import "nativewind/theme";
+
+@theme {
+  --color-olive-50: #f5f7eb;
+  --color-olive-100: #e8ecd3;
+  --color-olive-200: #d4daaf;
+  --color-olive-300: #b8c17f;
+  --color-olive-400: #9aa85a;
+  --color-olive-500: #6B7220;
+  --color-olive-600: #5a611c;
+  --color-olive-700: #474d17;
+  --color-olive-800: #3a3f14;
+  --color-olive-900: #2d3111;
+
+  --color-gold-50: #fdf8e8;
+  --color-gold-100: #faefc5;
+  --color-gold-200: #f5de8c;
+  --color-gold-300: #eec94e;
+  --color-gold-400: #e5b82a;
+  --color-gold-500: #D4AF37;
+  --color-gold-600: #b89428;
+  --color-gold-700: #967520;
+  --color-gold-800: #7a5e1c;
+  --color-gold-900: #654d1a;
+
+  --color-sage-50: #f7f9f7;
+  --color-sage-100: #f0f3f0;
+  --color-sage-200: #e6ebe6;
+  --color-sage-300: #EAEFEA;
+  --color-sage-400: #d0d9d0;
+  --color-sage-500: #b8c5b8;
+  --color-sage-600: #9aab9a;
+  --color-sage-700: #7d8f7d;
+  --color-sage-800: #667566;
+  --color-sage-900: #545f54;
+
+  --color-primary: #6B7220;
+  --color-accent: #D4AF37;
+  --color-surface: #FFFFFF;
+  --color-background: #EAEFEA;
+  --color-success: #EAE8BB;
+  --color-error: #EE2023;
+  --color-error-light: #FEE2E2;
+  --color-error-border: #FECACA;
+
+  --font-serif: "PlayfairDisplay-Bold";
+  --font-sans: "Inter-Regular";
+  --font-sans-medium: "Inter-Medium";
+  --font-sans-semibold: "Inter-SemiBold";
+  --font-sans-bold: "Inter-Bold";
+}
+
+@layer base {
+  .text-h1 {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #333333;
+  }
+
+  .text-h2 {
+    font-family: var(--font-sans-bold);
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 700;
+    color: #333333;
+  }
+
+  .text-body {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 400;
+    color: #333333;
+  }
+
+  .text-body-medium {
+    font-family: var(--font-sans-medium);
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 500;
+    color: #333333;
+  }
+
+  .text-label {
+    font-family: var(--font-sans-medium);
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 500;
+    color: #333333;
+  }
+
+  .text-caption {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 400;
+    color: #666666;
+  }
+
+  .text-caption-bold {
+    font-family: var(--font-sans-semibold);
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 600;
+    color: #333333;
+  }
+}
