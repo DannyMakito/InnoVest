@@ -62,7 +62,7 @@ For every feature:
 - Build the smallest useful version first.
 - Refactor only when repetition or complexity appears.
 - Keep the app easy to teach and explain.
-
+- On Android devices, when creating the bottom tab ensure the bottom tab navigation respects safe area insets to prevent overlapping with the system navigation bar
 This project should feel like a real fintech app, but remain approachable for students.
 
 ---
