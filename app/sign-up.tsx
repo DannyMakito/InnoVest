@@ -11,17 +11,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { EmailVerificationModal } from "@/components/auth/email-verification-modal";
 import { images } from "@/constants/images";
 
 export default function SignUpScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [verificationVisible, setVerificationVisible] = useState(false);
 
-  const completeVerification = () => {
-    setVerificationVisible(false);
-    router.replace("/id-verification");
+  const handleCreateAccount = () => {
+    router.push({ pathname: "/verify-otp", params: { email } });
   };
 
   return (
@@ -97,7 +94,7 @@ export default function SignUpScreen() {
               </Text>
             </View>
 
-            <PrimaryButton label="CREATE ACCOUNT" onPress={() => setVerificationVisible(true)} />
+            <PrimaryButton label="CREATE ACCOUNT" onPress={handleCreateAccount} />
 
             <Text className="mt-5 text-center font-sans text-[12px] leading-[16px] text-[#333333]">
               Already have an account?{" "}
@@ -108,13 +105,6 @@ export default function SignUpScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <EmailVerificationModal
-        email={email}
-        visible={verificationVisible}
-        onClose={() => setVerificationVisible(false)}
-        onComplete={completeVerification}
-      />
     </SafeAreaView>
   );
 }

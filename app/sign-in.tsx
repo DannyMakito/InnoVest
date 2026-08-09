@@ -10,17 +10,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { EmailVerificationModal } from "@/components/auth/email-verification-modal";
 import { images } from "@/constants/images";
 
 export default function SignInScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [verificationVisible, setVerificationVisible] = useState(false);
 
-  const completeVerification = () => {
-    setVerificationVisible(false);
-    router.replace("/id-verification");
+  const handleLogin = () => {
+    router.replace("/(tabs)/dashboard");
   };
 
   return (
@@ -72,10 +69,10 @@ export default function SignInScreen() {
               </Text>
             </TouchableOpacity>
 
-            <PrimaryButton label="LOG IN" onPress={() => setVerificationVisible(true)} />
+            <PrimaryButton label="LOG IN" onPress={handleLogin} />
 
             <Text className="mt-24 text-center font-sans text-[12px] leading-[16px] text-[#333333]">
-              Don’t have an account?{" "}
+              Don't have an account?{" "}
               <Link href="/sign-up" className="font-sans-semibold text-[#111111]">
                 Sign up.
               </Link>
@@ -83,13 +80,6 @@ export default function SignInScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <EmailVerificationModal
-        email={email}
-        visible={verificationVisible}
-        onClose={() => setVerificationVisible(false)}
-        onComplete={completeVerification}
-      />
     </SafeAreaView>
   );
 }

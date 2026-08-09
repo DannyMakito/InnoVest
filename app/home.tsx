@@ -1,7 +1,19 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import {
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { images } from "@/constants/images";
+import { useWalletStore } from "@/store/wallet-store";
 
 const recentActivity = [
   {
@@ -47,7 +59,7 @@ function Header() {
   return (
     <View className="mb-1 flex-row items-center justify-between">
       <View className="w-[54px] items-start">
-        <Image source={images.innovestIconTree} resizeMode="contain" style={{ height: 36, width: 36 }} />
+        <Image source={images.innovestLogo} resizeMode="contain" style={{ height: 36, width: 36 }} />
       </View>
 
       <Text className="font-sans-bold text-[14px] leading-[18px] tracking-[0.2px] text-[#111111]">
@@ -68,59 +80,217 @@ function Header() {
 }
 
 function NetWorthCard() {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<"deposit" | "withdraw">("deposit");
+  const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const { walletAccounts, quickDeposit, quickWithdraw, getTotalBalance } = useWalletStore();
+  const mainWallet = walletAccounts.find((w) => w.id === "wa1");
+  const totalBalance = getTotalBalance();
+
+  const handleOpenModal = (type: "deposit" | "withdraw") => {
+    setModalType(type);
+    setAmount("");
+    setModalVisible(true);
+  };
+
+  const handleSubmit = () => {
+    const num = parseFloat(amount);
+    if (!num || num <= 0) {
+      Alert.alert("Invalid Amount", "Please enter a valid amount.");
+      return;
+    }
+
+    if (modalType === "withdraw" && mainWallet && num > mainWallet.availableBalance) {
+      Alert.alert("Insufficient Funds", "You don't have enough balance for this withdrawal.");
+      return;
+    }
+
+    setLoading(true);
+    setTimeout(() => {
+      if (modalType === "deposit") {
+        quickDeposit("wa1", num);
+        Alert.alert("Success", `R${num.toLocaleString()} deposited successfully!`);
+      } else {
+        quickWithdraw("wa1", num);
+        Alert.alert("Success", `R${num.toLocaleString()} withdrawn successfully!`);
+      }
+      setLoading(false);
+      setModalVisible(false);
+      setAmount("");
+    }, 1500);
+  };
+
+  const formatBalance = (value: number) => {
+    return `R ${value.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
   return (
-    <View
-      className="overflow-hidden rounded-[5px] bg-primary"
-      style={{
-        shadowColor: "#000000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      }}
-    >
-      <View className="items-center px-5 pb-4 pt-3">
-        <Text className="font-sans text-[14px] leading-[18px] text-white/90">Total Net Worth</Text>
-        <Text className="mt-1 font-serif text-[38px] leading-[44px] text-white">R 78,500.00</Text>
-        <Image
-          source={images.innovestIconTree}
-          resizeMode="contain"
-          style={{ height: 45, marginTop: 1, tintColor: "#FFFFFF", width: 45 }}
-        />
+    <>
+      <View
+        className="overflow-hidden rounded-[5px] bg-primary"
+        style={{
+          shadowColor: "#000000",
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
+        }}
+      >
+        <View className="items-center px-5 pb-4 pt-3">
+          <Text className="font-sans text-[14px] leading-[18px] text-white/90">Total Net Worth</Text>
+          <Text className="mt-1 font-serif text-[38px] leading-[44px] text-white">
+            {formatBalance(totalBalance)}
+          </Text>
+          <Image
+            source={images.innovestIconTree}
+            resizeMode="contain"
+            style={{ height: 45, marginTop: 1, tintColor: "#FFFFFF", width: 45 }}
+          />
+        </View>
+
+        <View className="h-px bg-white/20" />
+
+        <View className="flex-row gap-4 px-4 py-3">
+          <TouchableOpacity
+            activeOpacity={0.86}
+            onPress={() => handleOpenModal("deposit")}
+            style={{
+              alignItems: "center",
+              backgroundColor: "rgba(54, 59, 16, 0.35)",
+              borderRadius: 6,
+              flex: 1,
+              height: 38,
+              justifyContent: "center",
+            }}
+          >
+            <Text className="font-sans-bold text-[14px] text-white">Deposit</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.86}
+            onPress={() => handleOpenModal("withdraw")}
+            style={{
+              alignItems: "center",
+              borderColor: "#D4AF37",
+              borderRadius: 6,
+              borderWidth: 1,
+              flex: 1,
+              height: 38,
+              justifyContent: "center",
+            }}
+          >
+            <Text className="font-sans-bold text-[14px] text-[#D4AF37]">Withdraw</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <View className="h-px bg-white/20" />
-
-      <View className="flex-row gap-4 px-4 py-3">
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
         <TouchableOpacity
-          activeOpacity={0.86}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
           style={{
-            alignItems: "center",
-            backgroundColor: "rgba(54, 59, 16, 0.35)",
-            borderRadius: 6,
             flex: 1,
-            height: 38,
+            backgroundColor: "rgba(0,0,0,0.5)",
             justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          <Text className="font-sans-bold text-[14px] text-white">Deposit</Text>
-        </TouchableOpacity>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{
+            backgroundColor: "#FFFFFF",
+            borderRadius: 14,
+            padding: 24,
+            width: "85%",
+            maxWidth: 340,
+          }}>
+            <Text style={{ fontFamily: "Inter-Bold", fontSize: 18, color: "#111111", textAlign: "center" }}>
+              {modalType === "deposit" ? "Deposit Funds" : "Withdraw Funds"}
+            </Text>
+            <Text style={{ fontFamily: "Inter-Regular", fontSize: 13, color: "#666666", textAlign: "center", marginTop: 6 }}>
+              {modalType === "deposit"
+                ? "Enter the amount you want to deposit"
+                : `Available: ${formatBalance(mainWallet?.availableBalance ?? 0)}`}
+            </Text>
 
-        <TouchableOpacity
-          activeOpacity={0.86}
-          style={{
-            alignItems: "center",
-            borderColor: "#D4AF37",
-            borderRadius: 6,
-            borderWidth: 1,
-            flex: 1,
-            height: 38,
-            justifyContent: "center",
-          }}
-        >
-          <Text className="font-sans-bold text-[14px] text-[#D4AF37]">Withdraw</Text>
+            <TextInput
+              value={amount}
+              onChangeText={setAmount}
+              placeholder="Enter amount"
+              keyboardType="numeric"
+              placeholderTextColor="#999999"
+              style={{
+                fontFamily: "Inter-Regular",
+                fontSize: 16,
+                color: "#111111",
+                borderWidth: 1,
+                borderColor: "#D5DABF",
+                borderRadius: 8,
+                height: 50,
+                paddingHorizontal: 16,
+                marginTop: 18,
+                textAlign: "center",
+              }}
+            />
+
+            <View style={{ flexDirection: "row", gap: 12, marginTop: 20 }}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setModalVisible(false)}
+                style={{
+                  flex: 1,
+                  height: 46,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: "#D5DABF",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, color: "#666666" }}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={handleSubmit}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  height: 46,
+                  borderRadius: 8,
+                  backgroundColor: modalType === "deposit" ? "#6B7220" : "#EE2023",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  gap: 6,
+                }}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <>
+                    <Ionicons
+                      name={modalType === "deposit" ? "add-circle-outline" : "remove-circle-outline"}
+                      size={18}
+                      color="#FFF"
+                    />
+                    <Text style={{ fontFamily: "Inter-Bold", fontSize: 14, color: "#FFFFFF" }}>
+                      {modalType === "deposit" ? "Deposit" : "Withdraw"}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
         </TouchableOpacity>
-      </View>
-    </View>
+      </Modal>
+    </>
   );
 }
 
