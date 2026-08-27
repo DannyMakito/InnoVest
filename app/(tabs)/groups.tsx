@@ -10,8 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useGroupsStore, allAvailableMembers } from "@/store/groups-store";
-import { currentUser } from "@/data/mock-data";
+import { useGroupsStore, allAvailableMembers, currentUser } from "@/store/groups-store";
 import { Group, GroupMember, WithdrawalRequest } from "@/types/groups";
 
 export default function GroupsScreen() {
@@ -130,6 +129,31 @@ function GroupsList({
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
       >
+        {groups.length === 0 && (
+          <View
+            style={{
+              alignItems: "center",
+              backgroundColor: "#FFFFFF",
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: "#D5DABF",
+              borderStyle: "dashed",
+              padding: 32,
+            }}
+          >
+            <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: "#EEF2E4", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="people-outline" size={28} color="#6B7220" />
+            </View>
+            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 15, color: "#111111", marginTop: 12 }}>
+              {searchQuery.trim() ? "No groups found" : "No groups yet"}
+            </Text>
+            <Text style={{ fontFamily: "Inter-Regular", fontSize: 13, color: "#666666", marginTop: 4, textAlign: "center" }}>
+              {searchQuery.trim()
+                ? "Try a different search term"
+                : "Create your first group to start saving together"}
+            </Text>
+          </View>
+        )}
         {groups.map((group) => (
           <GroupCard key={group.id} group={group} onPress={() => onSelectGroup(group.id)} />
         ))}
@@ -650,10 +674,6 @@ function CreateGroupModal({ visible, onClose }: { visible: boolean; onClose: () 
       Alert.alert("Error", "Please enter a group name");
       return;
     }
-    if (selectedMembers.length === 0) {
-      Alert.alert("Error", "Please select at least one member");
-      return;
-    }
     createGroup(name.trim(), selectedMembers);
     setName("");
     setSelectedMembers([]);
@@ -699,6 +719,28 @@ function CreateGroupModal({ visible, onClose }: { visible: boolean; onClose: () 
           <Text style={{ fontFamily: "Inter-Medium", fontSize: 14, color: "#333333", marginBottom: 10 }}>
             Add Members
           </Text>
+          {availableMembers.length === 0 && (
+            <View
+              style={{
+                alignItems: "center",
+                backgroundColor: "#FFFFFF",
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: "#D5DABF",
+                borderStyle: "dashed",
+                padding: 20,
+                marginBottom: 8,
+              }}
+            >
+              <Ionicons name="people-outline" size={28} color="#999999" />
+              <Text style={{ fontFamily: "Inter-Medium", fontSize: 13, color: "#666666", marginTop: 8 }}>
+                No other members available yet
+              </Text>
+              <Text style={{ fontFamily: "Inter-Regular", fontSize: 11, color: "#999999", marginTop: 2, textAlign: "center" }}>
+                You can create the group now and members can be invited later
+              </Text>
+            </View>
+          )}
           {availableMembers.map((member) => {
             const isSelected = selectedMembers.includes(member.id);
             return (

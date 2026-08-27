@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { WalletAccount, LinkedAccount, Transaction } from "@/types/wallet";
-import { mockWalletAccounts, mockLinkedAccounts, mockTransactions } from "@/data/wallet-mock-data";
+import { saBanks } from "@/data/banks";
+
+// Structural wallet containers every user starts with (zero balances)
+const defaultWalletAccounts: WalletAccount[] = [
+  { id: "wa-main", name: "Main Wallet", balance: 0, availableBalance: 0 },
+  { id: "wa-invest", name: "Investment Wallet", balance: 0, availableBalance: 0 },
+  { id: "wa-savings", name: "Savings Wallet", balance: 0, availableBalance: 0 },
+];
 
 interface WalletState {
   walletAccounts: WalletAccount[];
@@ -22,10 +29,10 @@ interface WalletState {
 }
 
 export const useWalletStore = create<WalletState>((set, get) => ({
-  walletAccounts: mockWalletAccounts,
-  linkedAccounts: mockLinkedAccounts,
-  transactions: mockTransactions,
-  selectedWalletId: "wa1",
+  walletAccounts: defaultWalletAccounts,
+  linkedAccounts: [],
+  transactions: [],
+  selectedWalletId: "wa-main",
 
   setSelectedWallet: (id) => set({ selectedWalletId: id }),
 
@@ -39,16 +46,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   },
 
   addLinkedAccount: (bank, name, lastFour, type, balance) => {
-    const bankColors: Record<string, string> = {
-      Capitec: "#6B7220",
-      FNB: "#D4AF37",
-      "Standard Bank": "#556B2F",
-      ABSA: "#8B7355",
-      Nedbank: "#003B5C",
-      "African Bank": "#E31837",
-      TymeBank: "#00C4B4",
-      Discovery: "#006B5E",
-    };
+    const bankInfo = saBanks.find((b) => b.name === bank);
     const newAccount: LinkedAccount = {
       id: `la${Date.now()}`,
       name,
@@ -56,7 +54,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
       lastFour,
       type,
       balance,
-      color: bankColors[bank] || "#6B7220",
+      color: bankInfo?.color || "#6B7220",
     };
     set((state) => ({ linkedAccounts: [...state.linkedAccounts, newAccount] }));
   },

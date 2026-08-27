@@ -215,6 +215,20 @@ function InvestmentsList({
       </View>
 
       <View className="gap-3">
+        {goals.length === 0 &&
+          fixedInvestments.filter((fi) => fi.status === "active").length === 0 && (
+            <View className="items-center rounded-xl border border-dashed border-olive-200 bg-white p-8">
+              <View className="h-14 w-14 items-center justify-center rounded-full bg-olive-100">
+                <Ionicons name="trending-up-outline" size={26} color={primary} />
+              </View>
+              <Text className="mt-3 font-sans-semibold text-[15px] text-neutral-900">
+                No investments yet
+              </Text>
+              <Text className="mt-1 text-center font-sans text-[13px] text-neutral-500">
+                Start a fixed investment or create a savings goal to begin growing your money
+              </Text>
+            </View>
+          )}
         {goals.map((goal) => {
           const percentage = Math.min(
             Math.round((goal.savedAmount / goal.targetAmount) * 100),

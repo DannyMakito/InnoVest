@@ -1,18 +1,18 @@
+import { images } from "@/constants/images";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
 import {
-  FlatList,
-  Image,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
+    FlatList,
+    Image,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-import { useRouter } from "expo-router";
-import { images } from "@/constants/images";
 
 type OnboardingSlide = {
   id: string;
@@ -61,7 +61,7 @@ export default function OnboardingScreen() {
 
   const goNext = () => {
     if (activeIndex === slides.length - 1) {
-      router.replace("/sign-up");
+      router.replace({ pathname: "/sign-up", params: { from: "onboarding" } });
       return;
     }
 

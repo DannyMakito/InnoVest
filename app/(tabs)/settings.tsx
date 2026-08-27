@@ -2,6 +2,7 @@ import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAuth, useUser } from "@clerk/expo";
 
 const menuItems = [
   { icon: "create-outline", label: "Edit Profile", screen: "edit-profile" },
@@ -11,12 +12,35 @@ const menuItems = [
   { icon: "help-circle-outline", label: "Help & Support", screen: "help" },
 ] as const;
 
+const getInitials = (fullName?: string | null, email?: string | null) => {
+  if (fullName && fullName.trim()) {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  if (email) {
+    return email.substring(0, 2).toUpperCase();
+  }
+  return "IV";
+};
+
 export default function SettingsScreen() {
   const router = useRouter();
+  const { user } = useUser();
+  const { signOut } = useAuth();
 
-  const handleLogout = () => {
-    router.replace("/sign-in");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      router.replace("/sign-in");
+    } catch {
+      router.replace("/sign-in");
+    }
   };
+
+  const email = user?.primaryEmailAddress?.emailAddress;
+  const fullName = user?.fullName || user?.firstName || "InnoVest User";
+  const initials = getInitials(fullName, email);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F4F7F0" }} edges={["top"]}>
@@ -47,17 +71,22 @@ export default function SettingsScreen() {
               shadowOpacity: 0.1,
               shadowRadius: 6,
               elevation: 3,
+              overflow: "hidden",
             }}
           >
-            <Text style={{ fontFamily: "Inter-Bold", fontSize: 36, color: "#FFFFFF" }}>
-              AS
-            </Text>
+            {user?.imageUrl ? (
+              <Image source={{ uri: user.imageUrl }} style={{ width: "100%", height: "100%" }} />
+            ) : (
+              <Text style={{ fontFamily: "Inter-Bold", fontSize: 36, color: "#FFFFFF" }}>
+                {initials}
+              </Text>
+            )}
           </View>
           <Text style={{ fontFamily: "Inter-Bold", fontSize: 20, color: "#111111" }}>
-            Ananya Sharma
+            {fullName}
           </Text>
           <Text style={{ fontFamily: "Inter-Regular", fontSize: 14, color: "#666666", marginTop: 3 }}>
-            ananya.sharma@email.com
+            {email || "No profile linked yet"}
           </Text>
         </View>
 

@@ -1,23 +1,58 @@
-import { useState } from "react";
+import { images } from "@/constants/images";
+import { useAuth, useSignIn } from "@clerk/expo";
 import { Link, useRouter } from "expo-router";
+import { useState } from "react";
 import {
-  Image,
-  KeyboardAvoidingView,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Image,
+    KeyboardAvoidingView,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { images } from "@/constants/images";
 
 export default function SignInScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { signIn } = useSignIn();
+  const { isLoaded } = useAuth();
 
-  const handleLogin = () => {
-    router.replace("/(tabs)/dashboard");
+  const handleLogin = async () => {
+    if (!isLoaded) return;
+    setError("");
+
+    if (!email.trim() || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error: signInError } = await signIn.password({
+        emailAddress: email,
+        password,
+      });
+
+      if (signInError) {
+        setError(signInError.longMessage || "Invalid email or password.");
+        setLoading(false);
+        return;
+      }
+
+      if (signIn.status === "complete") {
+        await signIn.finalize();
+        router.replace("/(tabs)/dashboard");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,7 +96,19 @@ export default function SignInScreen() {
               onChangeText={setEmail}
               autoCapitalize="none"
             />
-            <AuthInput label="Password" placeholder="Password" secureTextEntry />
+            <AuthInput
+              label="Password"
+              placeholder="Password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+
+            {error ? (
+              <Text style={{ fontFamily: "Inter-Medium", fontSize: 12, color: "#EE2023", marginTop: 8, textAlign: "center" }}>
+                {error}
+              </Text>
+            ) : null}
 
             <TouchableOpacity activeOpacity={0.8} style={{ alignSelf: "flex-end", paddingTop: 8 }}>
               <Text className="font-sans text-[11px] leading-[15px] text-[#6B7220]">
@@ -69,10 +116,26 @@ export default function SignInScreen() {
               </Text>
             </TouchableOpacity>
 
-            <PrimaryButton label="LOG IN" onPress={handleLogin} />
+            <TouchableOpacity
+              activeOpacity={0.86}
+              onPress={handleLogin}
+              disabled={loading}
+              style={{
+                alignItems: "center",
+                backgroundColor: loading ? "#D1D5DB" : "#6B7220",
+                borderRadius: 7,
+                height: 43,
+                justifyContent: "center",
+                marginTop: 18,
+              }}
+            >
+              <Text className="font-sans-bold text-[13px] tracking-[0.5px] text-white">
+                {loading ? "Logging in..." : "LOG IN"}
+              </Text>
+            </TouchableOpacity>
 
             <Text className="mt-24 text-center font-sans text-[12px] leading-[16px] text-[#333333]">
-              Don't have an account?{" "}
+              Don{"'"}t have an account?{" "}
               <Link href="/sign-up" className="font-sans-semibold text-[#111111]">
                 Sign up.
               </Link>
@@ -136,24 +199,5 @@ function AuthInput({
         ) : null}
       </View>
     </View>
-  );
-}
-
-function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.86}
-      onPress={onPress}
-      style={{
-        alignItems: "center",
-        backgroundColor: "#6B7220",
-        borderRadius: 7,
-        height: 43,
-        justifyContent: "center",
-        marginTop: 18,
-      }}
-    >
-      <Text className="font-sans-bold text-[13px] tracking-[0.5px] text-white">{label}</Text>
-    </TouchableOpacity>
   );
 }

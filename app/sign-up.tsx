@@ -1,24 +1,80 @@
-import { useState } from "react";
+import { images } from "@/constants/images";
+import { useAuth, useSignUp } from "@clerk/expo";
 import { Link, useRouter } from "expo-router";
+import { useState } from "react";
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { images } from "@/constants/images";
 
 export default function SignUpScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { signUp } = useSignUp();
+  const { isLoaded } = useAuth();
 
-  const handleCreateAccount = () => {
-    router.push({ pathname: "/verify-otp", params: { email } });
+  const handleCreateAccount = async () => {
+    if (!isLoaded) {
+      setError("Clerk is still loading. Please wait...");
+      return;
+    }
+    setError("");
+
+    if (!fullName.trim() || !email.trim() || !password) {
+      setError("Please fill in your name, email, and password.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Step 1: create the user with email + password
+      const result = await signUp.password({
+        emailAddress: email,
+        password,
+      });
+
+      if (result.error) {
+        const msg = result.error.longMessage || result.error.message || "Could not create account. Try again.";
+        console.error("signUp.password error:", result.error);
+        setError(msg);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: set first name
+      await signUp.update({ firstName: fullName });
+
+      // Step 3: send the email verification code
+      const emailResult = await signUp.verifications.sendEmailCode();
+
+      if (emailResult.error) {
+        const msg = emailResult.error.longMessage || emailResult.error.message || "Could not send verification code.";
+        console.error("sendEmailCode error:", emailResult.error);
+        setError(msg);
+        setLoading(false);
+        return;
+      }
+
+      // Step 4: navigate to OTP screen
+      router.push({ pathname: "/verify-otp", params: { email } });
+    } catch (err) {
+      console.error("signUp unexpected error:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -58,7 +114,12 @@ export default function SignUpScreen() {
               style={{ alignSelf: "center", height: 78, marginTop: 8, width: 82 }}
             />
 
-            <AuthInput label="Full Name" placeholder="Your full legal name" />
+            <AuthInput
+              label="Full Name"
+              placeholder="Your full legal name"
+              value={fullName}
+              onChangeText={setFullName}
+            />
             <AuthInput
               label="Email Address"
               placeholder="name@example.com"
@@ -71,13 +132,22 @@ export default function SignUpScreen() {
               label="Password"
               placeholder="Create a secure password"
               secureTextEntry
-              hasError
+              value={password}
+              onChangeText={setPassword}
             />
             <AuthInput
               label="Phone Number"
               placeholder="Your mobile phone number"
               keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
             />
+
+            {error ? (
+              <Text style={{ fontFamily: "Inter-Medium", fontSize: 12, color: "#EE2023", marginTop: 8, textAlign: "center" }}>
+                {error}
+              </Text>
+            ) : null}
 
             <View className="mt-3 flex-row items-center gap-2">
               <View
@@ -94,7 +164,23 @@ export default function SignUpScreen() {
               </Text>
             </View>
 
-            <PrimaryButton label="CREATE ACCOUNT" onPress={handleCreateAccount} />
+            <TouchableOpacity
+              activeOpacity={0.86}
+              onPress={handleCreateAccount}
+              disabled={loading}
+              style={{
+                alignItems: "center",
+                backgroundColor: loading ? "#D1D5DB" : "#6B7220",
+                borderRadius: 7,
+                height: 48,
+                justifyContent: "center",
+                marginTop: 20,
+              }}
+            >
+              <Text className="font-sans-bold text-[13px] tracking-[0.5px] text-white">
+                {loading ? "Creating Account..." : "CREATE ACCOUNT"}
+              </Text>
+            </TouchableOpacity>
 
             <Text className="mt-5 text-center font-sans text-[12px] leading-[16px] text-[#333333]">
               Already have an account?{" "}
@@ -167,24 +253,5 @@ function AuthInput({
         ) : null}
       </View>
     </View>
-  );
-}
-
-function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.86}
-      onPress={onPress}
-      style={{
-        alignItems: "center",
-        backgroundColor: "#6B7220",
-        borderRadius: 7,
-        height: 48,
-        justifyContent: "center",
-        marginTop: 20,
-      }}
-    >
-      <Text className="font-sans-bold text-[13px] tracking-[0.5px] text-white">{label}</Text>
-    </TouchableOpacity>
   );
 }

@@ -1,6 +1,23 @@
 import { create } from "zustand";
 import { Group, GroupMember, WithdrawalRequest } from "@/types/groups";
-import { mockGroups, currentUser } from "@/data/mock-data";
+
+// Placeholder session user until real authentication is wired up
+export const currentUser: GroupMember = {
+  id: "u1",
+  name: "You",
+  initials: "YO",
+  color: "#6B7220",
+  isAdmin: true,
+};
+
+export const syncCurrentUser = (id: string, name: string, initials: string) => {
+  currentUser.id = id;
+  currentUser.name = name;
+  currentUser.initials = initials;
+};
+
+// People you can invite to a group (empty until invites are implemented)
+export const allAvailableMembers: GroupMember[] = [currentUser];
 
 interface GroupsState {
   groups: Group[];
@@ -16,21 +33,8 @@ interface GroupsState {
   createWithdrawalRequest: (groupId: string, amount: number, purpose: string) => void;
 }
 
-const extraMembers: GroupMember[] = [
-  { id: "u11", name: "Mandla N", initials: "MN", color: "#708090", isAdmin: false },
-  { id: "u12", name: "Fatima A", initials: "FA", color: "#CD853F", isAdmin: false },
-  { id: "u13", name: "Chris L", initials: "CL", color: "#6B8E23", isAdmin: false },
-  { id: "u14", name: "Precious T", initials: "PT", color: "#DAA520", isAdmin: false },
-  { id: "u15", name: "James K", initials: "JK", color: "#8FBC8F", isAdmin: false },
-];
-
-export const allAvailableMembers: GroupMember[] = [
-  currentUser,
-  ...extraMembers,
-];
-
 export const useGroupsStore = create<GroupsState>((set, get) => ({
-  groups: mockGroups,
+  groups: [],
   selectedGroupId: null,
   searchQuery: "",
 

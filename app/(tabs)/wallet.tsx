@@ -12,12 +12,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useWalletStore } from "@/store/wallet-store";
 import { LinkedAccount, Transaction } from "@/types/wallet";
+import { saBanks, SouthAfricanBank } from "@/data/banks";
 
 export default function WalletScreen() {
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showAddAccount, setShowAddAccount] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   return (
@@ -38,7 +40,7 @@ export default function WalletScreen() {
           onWithdraw={() => setShowWithdraw(true)}
           onTransfer={() => setShowTransfer(true)}
         />
-        <LinkedAccountsSection />
+        <LinkedAccountsSection onAdd={() => setShowAddAccount(true)} />
         <RecentTransactions
           onViewAll={() => setShowHistory(true)}
           onSelect={(tx) => setSelectedTx(tx)}
@@ -46,6 +48,7 @@ export default function WalletScreen() {
       </ScrollView>
 
       <DepositModal visible={showDeposit} onClose={() => setShowDeposit(false)} />
+      <AddAccountModal visible={showAddAccount} onClose={() => setShowAddAccount(false)} />
       <WithdrawalModal visible={showWithdraw} onClose={() => setShowWithdraw(false)} />
       <InternalTransferModal visible={showTransfer} onClose={() => setShowTransfer(false)} />
       <TransactionHistoryModal
@@ -165,7 +168,7 @@ function QuickActions({
   );
 }
 
-function LinkedAccountsSection() {
+function LinkedAccountsSection({ onAdd }: { onAdd: () => void }) {
   const { linkedAccounts, removeLinkedAccount } = useWalletStore();
 
   const handleRemove = (account: LinkedAccount) => {
@@ -183,10 +186,35 @@ function LinkedAccountsSection() {
     <View style={{ marginBottom: 18 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <Text style={{ fontFamily: "Inter-Bold", fontSize: 15, color: "#111111" }}>Linked Accounts</Text>
-        <TouchableOpacity style={{ padding: 4 }}>
+        <TouchableOpacity style={{ padding: 4 }} onPress={onAdd} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="add-circle-outline" size={20} color="#6B7220" />
         </TouchableOpacity>
       </View>
+      {linkedAccounts.length === 0 && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={onAdd}
+          style={{
+            alignItems: "center",
+            backgroundColor: "#FFFFFF",
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: "#D5DABF",
+            borderStyle: "dashed",
+            padding: 24,
+          }}
+        >
+          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#EEF2E4", alignItems: "center", justifyContent: "center" }}>
+            <Ionicons name="add" size={22} color="#6B7220" />
+          </View>
+          <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, color: "#111111", marginTop: 10 }}>
+            No linked accounts yet
+          </Text>
+          <Text style={{ fontFamily: "Inter-Regular", fontSize: 12, color: "#666666", marginTop: 3, textAlign: "center" }}>
+            Tap to link your bank account
+          </Text>
+        </TouchableOpacity>
+      )}
       {linkedAccounts.map((acc) => (
         <View
           key={acc.id}
@@ -238,6 +266,26 @@ function RecentTransactions({
           <Text style={{ fontFamily: "Inter-Medium", fontSize: 12, color: "#6B7220" }}>View All</Text>
         </TouchableOpacity>
       </View>
+      {recent.length === 0 && (
+        <View
+          style={{
+            alignItems: "center",
+            backgroundColor: "#FFFFFF",
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: "#D5DABF",
+            borderStyle: "dashed",
+            padding: 24,
+          }}
+        >
+          <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, color: "#111111" }}>
+            No transactions yet
+          </Text>
+          <Text style={{ fontFamily: "Inter-Regular", fontSize: 12, color: "#666666", marginTop: 3, textAlign: "center" }}>
+            Your deposits and withdrawals will appear here
+          </Text>
+        </View>
+      )}
       {recent.map((tx) => (
         <TransactionRow key={tx.id} transaction={tx} onPress={() => onSelect(tx)} />
       ))}
@@ -435,6 +483,27 @@ function DepositModal({ visible, onClose }: { visible: boolean; onClose: () => v
               </View>
 
               <Text style={{ fontFamily: "Inter-Medium", fontSize: 14, color: "#333333", marginBottom: 8 }}>From Account</Text>
+              {linkedAccounts.filter((a) => a.balance > 0).length === 0 && (
+                <View
+                  style={{
+                    alignItems: "center",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: "#D5DABF",
+                    borderStyle: "dashed",
+                    padding: 20,
+                    marginBottom: 8,
+                  }}
+                >
+                  <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: "#111111" }}>
+                    No funded bank accounts
+                  </Text>
+                  <Text style={{ fontFamily: "Inter-Regular", fontSize: 11, color: "#666666", marginTop: 3, textAlign: "center" }}>
+                    Link a bank account from the Linked Accounts section to get started
+                  </Text>
+                </View>
+              )}
               {linkedAccounts.filter((a) => a.balance > 0).map((acc) => (
                 <TouchableOpacity
                   key={acc.id}
@@ -683,6 +752,26 @@ function WithdrawalModal({ visible, onClose }: { visible: boolean; onClose: () =
           {step === 2 && (
             <View>
               <Text style={{ fontFamily: "Inter-Medium", fontSize: 14, color: "#333333", marginBottom: 8 }}>Select Destination</Text>
+              {linkedAccounts.length === 0 && (
+                <View
+                  style={{
+                    alignItems: "center",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: "#D5DABF",
+                    borderStyle: "dashed",
+                    padding: 24,
+                  }}
+                >
+                  <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, color: "#111111" }}>
+                    No linked accounts yet
+                  </Text>
+                  <Text style={{ fontFamily: "Inter-Regular", fontSize: 12, color: "#666666", marginTop: 3, textAlign: "center" }}>
+                    Link a bank account first to withdraw funds
+                  </Text>
+                </View>
+              )}
               {linkedAccounts.map((acc) => (
                 <TouchableOpacity
                   key={acc.id}
@@ -1139,6 +1228,211 @@ function TransactionDetailModal({
             <Row label="Amount" value={`R ${transaction.amount.toLocaleString()}.00`} last />
           </View>
         </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+// ─── ADD LINKED ACCOUNT MODAL ────────────────────────────────────────────────────
+
+function AddAccountModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const [showBankList, setShowBankList] = useState(false);
+  const [selectedBank, setSelectedBank] = useState<SouthAfricanBank | null>(null);
+  const [accountNumber, setAccountNumber] = useState("");
+  const [type, setType] = useState<LinkedAccount["type"]>("cheque");
+  const { addLinkedAccount } = useWalletStore();
+
+  const isValid = !!selectedBank && accountNumber.length >= 6;
+
+  const reset = () => {
+    setShowBankList(false);
+    setSelectedBank(null);
+    setAccountNumber("");
+    setType("cheque");
+    onClose();
+  };
+
+  const handleSave = () => {
+    if (!isValid || !selectedBank) return;
+    const lastFour = accountNumber.slice(-4);
+    const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+    addLinkedAccount(selectedBank.name, `${selectedBank.shortName} ${typeName}`, lastFour, type, 0);
+    Alert.alert(
+      "Account Linked",
+      `Your ${selectedBank.name} account ending in ${lastFour} has been linked successfully.`
+    );
+    reset();
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#F4F7F0" }} edges={["top"]}>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12 }}>
+          <TouchableOpacity onPress={reset} style={{ padding: 4 }}>
+            <Ionicons name="close" size={24} color="#111111" />
+          </TouchableOpacity>
+          <Text style={{ fontFamily: "Inter-Bold", fontSize: 18, color: "#111111", flex: 1, textAlign: "center" }}>
+            Link Bank Account
+          </Text>
+          <View style={{ width: 32 }} />
+        </View>
+
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}>
+          <Text style={{ fontFamily: "Inter-Medium", fontSize: 14, color: "#333333", marginBottom: 8 }}>Select Bank</Text>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setShowBankList(!showBankList)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#FFFFFF",
+              borderRadius: 10,
+              borderWidth: 2,
+              borderColor: showBankList ? "#6B7220" : "#D5DABF",
+              padding: 12,
+            }}
+          >
+            {selectedBank ? (
+              <>
+                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: selectedBank.color, alignItems: "center", justifyContent: "center", marginRight: 10 }}>
+                  <Text style={{ fontFamily: "Inter-Bold", fontSize: 12, color: "#FFFFFF" }}>{selectedBank.name.charAt(0)}</Text>
+                </View>
+                <Text style={{ fontFamily: "Inter-Medium", fontSize: 14, color: "#111111", flex: 1 }}>{selectedBank.name}</Text>
+              </>
+            ) : (
+              <Text style={{ fontFamily: "Inter-Regular", fontSize: 14, color: "#999999", flex: 1 }}>Choose your bank</Text>
+            )}
+            <Ionicons name={showBankList ? "chevron-up" : "chevron-down"} size={20} color="#666666" />
+          </TouchableOpacity>
+
+          {showBankList && (
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 10, borderWidth: 1, borderColor: "#D5DABF", marginTop: 8 }}>
+              {saBanks.map((bank, i) => (
+                <TouchableOpacity
+                  key={bank.id}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setSelectedBank(bank);
+                    setShowBankList(false);
+                  }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: 12,
+                    borderBottomWidth: i < saBanks.length - 1 ? 1 : 0,
+                    borderBottomColor: "#F0F0F0",
+                  }}
+                >
+                  <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: bank.color, alignItems: "center", justifyContent: "center", marginRight: 10 }}>
+                    <Text style={{ fontFamily: "Inter-Bold", fontSize: 12, color: "#FFFFFF" }}>{bank.name.charAt(0)}</Text>
+                  </View>
+                  <Text style={{ fontFamily: "Inter-Medium", fontSize: 14, color: "#111111", flex: 1 }}>{bank.name}</Text>
+                  <Text style={{ fontFamily: "Inter-Regular", fontSize: 11, color: "#999999", marginRight: 8 }}>{bank.branchCode}</Text>
+                  {selectedBank?.id === bank.id && <Ionicons name="checkmark-circle" size={20} color="#6B7220" />}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          <Text style={{ fontFamily: "Inter-Medium", fontSize: 14, color: "#333333", marginBottom: 8, marginTop: 20 }}>Account Number</Text>
+          <TextInput
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderRadius: 10,
+              borderWidth: 2,
+              borderColor: "#D5DABF",
+              padding: 14,
+              fontFamily: "Inter-Medium",
+              fontSize: 16,
+              color: "#111111",
+            }}
+            placeholder="Enter your account number"
+            placeholderTextColor="#999999"
+            keyboardType="number-pad"
+            maxLength={13}
+            value={accountNumber}
+            onChangeText={(t) => setAccountNumber(t.replace(/[^0-9]/g, ""))}
+          />
+          {accountNumber.length > 0 && accountNumber.length < 6 && (
+            <Text style={{ fontFamily: "Inter-Regular", fontSize: 12, color: "#EE2023", marginTop: 6 }}>
+              Account number must be at least 6 digits
+            </Text>
+          )}
+
+          <Text style={{ fontFamily: "Inter-Medium", fontSize: 14, color: "#333333", marginBottom: 8, marginTop: 20 }}>Branch Code</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#EEF2E4",
+              borderRadius: 10,
+              borderWidth: 2,
+              borderColor: "#D5DABF",
+              padding: 14,
+            }}
+          >
+            <Ionicons name="business-outline" size={18} color={selectedBank ? "#6B7220" : "#999999"} />
+            <Text
+              style={{
+                fontFamily: selectedBank ? "Inter-Bold" : "Inter-Regular",
+                fontSize: 16,
+                color: selectedBank ? "#111111" : "#999999",
+                flex: 1,
+                marginLeft: 10,
+              }}
+            >
+              {selectedBank ? selectedBank.branchCode : "Select a bank first"}
+            </Text>
+            {selectedBank && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Ionicons name="lock-closed-outline" size={14} color="#6B7220" />
+                <Text style={{ fontFamily: "Inter-Regular", fontSize: 11, color: "#6B7220" }}>Auto-filled</Text>
+              </View>
+            )}
+          </View>
+
+          <Text style={{ fontFamily: "Inter-Medium", fontSize: 14, color: "#333333", marginBottom: 8, marginTop: 20 }}>Account Type</Text>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {(["savings", "cheque", "credit"] as const).map((t) => (
+              <TouchableOpacity
+                key={t}
+                activeOpacity={0.8}
+                onPress={() => setType(t)}
+                style={{
+                  flex: 1,
+                  height: 42,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 2,
+                  borderColor: type === t ? "#6B7220" : "#D5DABF",
+                  backgroundColor: type === t ? "#EEF2E4" : "#FFFFFF",
+                }}
+              >
+                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: type === t ? "#6B7220" : "#333333" }}>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+
+        <View style={{ paddingHorizontal: 16, paddingBottom: 20 }}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            disabled={!isValid}
+            onPress={handleSave}
+            style={{
+              height: 52,
+              borderRadius: 12,
+              backgroundColor: isValid ? "#6B7220" : "#D1D5DB",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 16, color: "#FFFFFF" }}>Link Account</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     </Modal>
   );

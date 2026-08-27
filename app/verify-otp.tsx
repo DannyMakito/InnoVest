@@ -1,24 +1,57 @@
-import { useRef, useState } from "react";
-import { useRouter } from "expo-router";
+import { useAuth, useSignUp } from "@clerk/expo";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const codeLength = 6;
+const RESEND_SECONDS = 45;
 
 export default function VerifyOtpScreen() {
   const router = useRouter();
-  const { email: emailParam } = router.params || { email: "" };
+  const { email } = useLocalSearchParams<{ email: string }>();
   const [code, setCode] = useState<string[]>(Array(codeLength).fill(""));
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const { signUp } = useSignUp();
+  const { isLoaded } = useAuth();
+  const [error, setError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [countdown, setCountdown] = useState(RESEND_SECONDS);
+  const [canResend, setCanResend] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const handleChange = (value: string, index: number) => {
+  // Countdown timer
+  useEffect(() => {
+    if (countdown <= 0) {
+      setCanResend(true);
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
+    setCanResend(false);
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [countdown]);
+
+  const handleChange = async (value: string, index: number) => {
     const digit = value.replace(/\D/g, "").slice(-1);
     const nextCode = [...code];
     nextCode[index] = digit;
@@ -28,10 +61,37 @@ export default function VerifyOtpScreen() {
       inputRefs.current[index + 1]?.focus();
     }
 
+    // Auto-submit when all digits entered
     if (digit && index === codeLength - 1 && nextCode.every(Boolean)) {
-      setTimeout(() => {
-        router.replace("/id-verification");
-      }, 250);
+      const fullCode = nextCode.join("");
+      setVerifying(true);
+      setError("");
+
+      try {
+        const { error: verifyError } = await signUp.verifications.verifyEmailCode({
+          code: fullCode,
+        });
+
+        if (verifyError) {
+          setError("Invalid code. Please check and try again.");
+          setCode(Array(codeLength).fill(""));
+          inputRefs.current[0]?.focus();
+          setVerifying(false);
+          return;
+        }
+
+        // Verification succeeded — finalize the session
+        await signUp.finalize();
+
+        // Navigate to the app
+        router.replace("/(tabs)/dashboard");
+      } catch {
+        setError("Something went wrong. Please try again.");
+        setCode(Array(codeLength).fill(""));
+        inputRefs.current[0]?.focus();
+      } finally {
+        setVerifying(false);
+      }
     }
   };
 
@@ -41,7 +101,19 @@ export default function VerifyOtpScreen() {
     }
   };
 
-  const maskedEmail = emailParam || "your registered email";
+  const handleResendCode = async () => {
+    if (!canResend || !isLoaded) return;
+    setError("");
+    setCountdown(RESEND_SECONDS);
+
+    try {
+      await signUp.verifications.sendEmailCode();
+    } catch {
+      // Silent — user can try again after countdown
+    }
+  };
+
+  const maskedEmail = email || "your registered email";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
@@ -80,7 +152,7 @@ export default function VerifyOtpScreen() {
               Verify Your Email
             </Text>
             <Text style={{ fontFamily: "Inter-Regular", fontSize: 14, color: "#666666", textAlign: "center", marginTop: 8, lineHeight: 20 }}>
-              We've sent a 6-digit verification code to{"\n"}
+              We{"'"}ve sent a 6-digit verification code to{"\n"}
               {maskedEmail}
             </Text>
           </View>
@@ -99,6 +171,7 @@ export default function VerifyOtpScreen() {
                 textContentType="oneTimeCode"
                 maxLength={1}
                 autoFocus={index === 0}
+                editable={!verifying}
                 style={{
                   backgroundColor: "#FFFFFF",
                   borderColor: digit ? "#6B7220" : "#D5DABF",
@@ -110,21 +183,43 @@ export default function VerifyOtpScreen() {
                   height: 48,
                   textAlign: "center",
                   width: 50,
+                  opacity: verifying ? 0.6 : 1,
                 }}
               />
             ))}
           </View>
 
+          {error ? (
+            <Text style={{ fontFamily: "Inter-Medium", fontSize: 12, color: "#EE2023", marginTop: 16, textAlign: "center" }}>
+              {error}
+            </Text>
+          ) : null}
+
+          {verifying && (
+            <Text style={{ fontFamily: "Inter-Medium", fontSize: 13, color: "#6B7220", marginTop: 16, textAlign: "center" }}>
+              Verifying code...
+            </Text>
+          )}
+
           <View style={{ alignItems: "center", marginTop: 32, gap: 16 }}>
-            <TouchableOpacity activeOpacity={0.8}>
-              <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, color: "#6B7220" }}>
-                Resend Code <Text style={{ fontFamily: "Inter-Regular", color: "#999999" }}>in 45s</Text>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={handleResendCode}
+              disabled={!canResend}
+            >
+              <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 14, color: canResend ? "#6B7220" : "#999999" }}>
+                Resend Code{" "}
+                {!canResend && (
+                  <Text style={{ fontFamily: "Inter-Regular", color: "#999999" }}>
+                    in {countdown}s
+                  </Text>
+                )}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()}>
               <Text style={{ fontFamily: "Inter-Regular", fontSize: 14, color: "#999999" }}>
-                Didn't receive the code? Try another email
+                Didn{"'"}t receive the code? Try another email
               </Text>
             </TouchableOpacity>
           </View>

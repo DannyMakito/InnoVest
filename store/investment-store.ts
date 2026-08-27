@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { InvestmentGoal, Contribution, FixedInvestment } from "@/types/investment";
-import { mockInvestmentGoals, mockContributions, mockFixedInvestments } from "@/data/investment-mock-data";
 
 interface InvestmentState {
   goals: InvestmentGoal[];
@@ -27,9 +26,9 @@ interface InvestmentState {
 }
 
 export const useInvestmentStore = create<InvestmentState>((set, get) => ({
-  goals: mockInvestmentGoals,
-  contributions: mockContributions,
-  fixedInvestments: mockFixedInvestments,
+  goals: [],
+  contributions: [],
+  fixedInvestments: [],
   selectedGoalId: null,
   selectedFixedInvestmentId: null,
   automaticDeductionEnabled: {},
@@ -57,7 +56,7 @@ export const useInvestmentStore = create<InvestmentState>((set, get) => ({
       goalId,
       amount,
       date: new Date().toISOString().split("T")[0],
-      reference: `PH. Agust***234`,
+      reference: `CON-${Date.now()}`,
       type: get().automaticDeductionEnabled[goalId] ? "automatic" : "manual",
     };
 
