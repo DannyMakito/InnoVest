@@ -83,8 +83,8 @@ export default function VerifyOtpScreen() {
         // Verification succeeded — finalize the session
         await signUp.finalize();
 
-        // Navigate to the app
-        router.replace("/(tabs)/dashboard");
+        // Navigate to the ID verification screen
+        router.replace("/id-verification");
       } catch {
         setError("Something went wrong. Please try again.");
         setCode(Array(codeLength).fill(""));

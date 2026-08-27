@@ -55,7 +55,7 @@ export default function IdVerificationScreen() {
 
           <TouchableOpacity
             activeOpacity={0.86}
-            onPress={() => router.replace("/dashboard")}
+            onPress={() => router.replace("/")}
             style={{
               alignItems: "center",
               backgroundColor: "#6B7220",
