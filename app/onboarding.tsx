@@ -39,7 +39,7 @@ const slides: OnboardingSlide[] = [
     eyebrow: "Save instantly or for fixed terms.\nWatch your personal fund flourish.",
     description: "Save instantly or for fixed terms.\nWatch your personal fund flourish.",
     buttonLabel: "NEXT",
-    image: images.onboardingPersonalWealth,
+    image: images.onboard1,
     variant: "content",
   },
   {

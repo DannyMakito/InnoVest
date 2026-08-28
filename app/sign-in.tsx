@@ -33,23 +33,38 @@ export default function SignInScreen() {
 
     setLoading(true);
     try {
-      const { error: signInError } = await signIn.password({
-        emailAddress: email,
+      const result = await signIn.password({
+        identifier: email.trim(),
         password,
       });
 
-      if (signInError) {
-        setError(signInError.longMessage || "Invalid email or password.");
+      if (result.error) {
+        setError(result.error.longMessage || "Invalid email or password.");
         setLoading(false);
         return;
       }
 
-      if (signIn.status === "complete") {
-        await signIn.finalize();
-        router.replace("/(tabs)/dashboard");
+      if (signIn.status !== "complete" || !signIn.createdSessionId) {
+        if (signIn.status === "needs_second_factor") {
+          setError("Additional verification is required to complete sign in.");
+        } else {
+          setError("Your password was accepted, but Clerk did not create a session. Please try again.");
+        }
+        return;
       }
-    } catch {
-      setError("Something went wrong. Please try again.");
+
+      const finalizeResult = await signIn.finalize();
+      if (finalizeResult.error) {
+        setError(finalizeResult.error.longMessage || "Could not complete sign in. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      router.replace("/");
+    } catch (caughtError) {
+      console.error("Sign-in failed:", caughtError);
+      const message = caughtError instanceof Error ? caughtError.message : "";
+      setError(message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

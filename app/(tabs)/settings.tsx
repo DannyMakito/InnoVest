@@ -34,7 +34,7 @@ export default function SettingsScreen() {
       await signOut();
       router.replace("/sign-in");
     } catch {
-      router.replace("/sign-in");
+      return;
     }
   };
 

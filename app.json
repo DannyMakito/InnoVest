@@ -31,7 +31,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/innovest splash.png",
+          "image": "./assets/images/innovestSplash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#EAEFEA",
