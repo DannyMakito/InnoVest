@@ -48,7 +48,7 @@ const slides: OnboardingSlide[] = [
     eyebrow: "Pool money with friends, family, or\ncolleagues for bigger investments.",
     description: "Pool money with friends, family, or\ncolleagues for bigger investments.",
     buttonLabel: "DONE",
-    image: images.onboardingJoinClub,
+    image: images.obc,
     variant: "content",
   },
 ];
@@ -140,7 +140,7 @@ function WelcomeSlide({
 
         <View className="mt-5 h-[72px] w-[118px]">
           <Image
-            source={images.onboardingJoinClub}
+            source={images.obc}
             resizeMode="cover"
             style={{ width: "100%", height: "100%" }}
           />
