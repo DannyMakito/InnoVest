@@ -1,5 +1,5 @@
-import innovestIconBg from "../assets/images/innovest icontbg.png";
-import innovestIconTree from "../assets/images/innovest icontree.png";
+import innovestIconBg from "../assets/images/innovest-icontbg.png";
+import innovestIconTree from "../assets/images/innovest-icontree.png";
 import innovestSplash from "../assets/images/innovestSplash.png";
 import innovestLogo from "../assets/images/innovestLogo.png";
 import obc from "../assets/images/obc.jpg";
